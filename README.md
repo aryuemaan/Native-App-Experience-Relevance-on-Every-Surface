@@ -35,6 +35,7 @@ seats, join offers, bonuses) are a separate, hard-gated class that simply cannot
 reach a protected user; the only possible outcome for them is an audited block.
 
 ## Quickstart
+<img width="1838" height="840" alt="image" src="https://github.com/user-attachments/assets/b4240b38-037a-4818-b08e-4e1aa55448ca" />
 
 ```bash
 docker compose up --build
