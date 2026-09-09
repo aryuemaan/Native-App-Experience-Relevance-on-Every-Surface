@@ -1,89 +1,24 @@
-# Compliance by design — one page
+# FEG Pulse - Compliance Note
 
-OS surfaces are the customer's personal space. FEG Pulse treats that as a hard
-constraint, not a setting. Every guarantee below is enforced in code by the
-**Care Gate** (`services/gateway/src/domain/careGate.ts`) or its sibling guards,
-and is covered by tests (`services/gateway/src/__tests__/`).
+**Scope.** FEG Pulse places a user's own sports and gaming activity - followed teams, open slip, live cash-out value, favourite slots, followed tournaments, live-dealer tables - onto ambient OS surfaces (widgets, Live Activity, Dynamic Island, watch, voice, geolocation shortcuts) across FEG's regulated CEE markets (CZ, SK, PL, RO, HR, and LT via TOPsport). It is pull, not push: a surface can only ever reflect something the user chose to follow, so no server-side segmentation can attach content to an interest the user never selected.
 
-## GDPR / consent — granular, per surface
+**Design principle.** Compliance is enforced in one kernel - the Care Gate - through which every candidate render must pass. Nothing reaches a surface without a recorded, inspectable decision. Each decision emits a machine-readable reason code into an audit trail exposed at `GET /api/users/:id/audit`, giving every surface a "why am I seeing this?" answer. Guarantees are pinned by automated tests (31 in the Rust gateway, 40 in the TypeScript gateway).
 
-Live Activities, widgets, watch and geolocation are **opt-in per surface, not one
-master toggle**, and revocable in one tap (`PUT /api/users/:id/consent`).
-Withdrawal takes effect on the next evaluation. Personalisation consent is a
-prerequisite for any personalised surface at all.
+## EU baseline
 
-| Rule | Reason code | Test |
-| --- | --- | --- |
-| No surface without personalisation consent | `CONSENT_PERSONALISATION_MISSING` | careGate |
-| A surface the user switched off never renders | `CONSENT_SURFACE_OFF` | careGate |
-| Geolocation stays on-device (see below) | — | — |
+- **GDPR - lawful basis and consent.** Personalised surfaces require explicit, granular consent. Consent is captured per purpose and per surface (Live Activity/Dynamic Island, widgets, watch, geolocation), and any missing layer blocks the render (`CONSENT_PERSONALISATION_MISSING`, `CONSENT_SURFACE_OFF`). Marketing/inducement content additionally requires marketing consent (`CONSENT_MARKETING_MISSING`).
+- **IAB TCF v2.2.** The transparency and consent framework version is enforced; absent purpose consent blocks any personalised surface (`CONSENT_TCF_PURPOSE_MISSING`). The TCF version is configurable per deployment.
+- **Data minimisation and purpose limitation.** The interest and activity graph is designed to live as short-lived tokens on device; the server keeps no persistent marketing profile. Spend, loss, balance, deposit and net-position fields are stripped from every ambient payload (`FINANCIALS_STRIPPED`) so financial data never appears on a lock screen or shared surface.
+- **Geolocation / ePrivacy.** Location is consumed only as a derived proximity flag (for example "near a shop"), never as raw coordinates, and only when the geolocation surface is consented.
+- **Right to withdraw, access and erasure.** Consent is revocable per surface at any time and takes effect immediately on the next decision; because there is no persistent profile, erasure is the removal of on-device tokens and the user's graph entries.
 
-Geolocation is never logged server-side: the **device** derives a context flag
-(`near_shop` / `at_stadium`) and posts only that flag — never raw coordinates
-(`POST /api/users/:id/context/location`). Purpose-limited per Art. 5.
+## Responsible gambling
 
-## No dark patterns
+- **Zero inducement to protected users, by construction.** Self-excluded, at-risk (high-risk) and deposit-limit-reached users receive no inducements in either vertical. There is no code path from an inducement event (boost, slot promo, limited-seat alert, live-dealer join offer, bonus, jackpot) to a surface for these users; the only outcome is an audited block (`RG_SELF_EXCLUDED`, `RG_AT_RISK`, `RG_DEPOSIT_LIMIT_REACHED`).
+- **Informational continuity preserved.** Protected users still receive purely informational moments - a score, a settlement, a tournament start time, a new slot added to their library - rendered without any play/join call to action (`CTA_STRIPPED`). Protection removes inducements, not the user's own activity.
+- **No dark patterns.** Urgency and pressure copy (loss-chasing, "last chance", countdown coercion) is rejected before it can become a moment (`CONTENT_DARK_PATTERN`).
+- **Quiet hours and frequency caps.** No interruptive push is delivered during a user's quiet hours; a would-be push is downgraded to a silent surface rather than dropped (`QUIET_HOURS`, `DOWNGRADED_TO_SILENT`). Per-hour and per-day alert caps and per-offer frequency caps are enforced (`HOURLY_ALERT_CAP_REACHED`, `DAILY_ALERT_CAP_REACHED`, `OFFER_FREQUENCY_CAP_REACHED`).
+- **Eligibility first.** KYC, age and market checks gate every surface; an unverified or out-of-market account receives nothing at all (`ELIGIBILITY_NOT_VERIFIED`).
+- **Safer convenience.** One-tap actions are limited to risk-neutral or risk-reducing operations (cash-out, follow). The repeat-bet convenience is blocked for RG-protected users.
 
-Ambient surfaces show **status** — score, slip result, cash-out value — never
-urgency language, countdown pressure or loss-chasing framing. A tone linter
-(`domain/tone.ts`) rejects any copy containing pressure phrasing before it can
-become a moment.
-
-| Rule | Reason code | Test |
-| --- | --- | --- |
-| Urgency / pressure copy is rejected outright | `CONTENT_DARK_PATTERN` | momentRouter (`rejects a pushy promo`) |
-
-## Responsible gaming — enforced at the data layer
-
-Self-exclusion / at-risk / limit flags **hard-block** the inducement class and
-the "repeat bet" action at the data layer — not hidden in the UI. Informational
-continuity (score, slip status) is deliberately preserved for these users.
-
-| Rule | Reason code | Test |
-| --- | --- | --- |
-| No boost to a self-excluded user | `RG_SELF_EXCLUDED` | careGate |
-| No boost to an at-risk user | `RG_AT_RISK` | careGate |
-| No boost after a deposit/spend limit | `RG_DEPOSIT_LIMIT_REACHED` | careGate |
-| "Repeat bet" blocked for protected users | (403 at `/repeat-bet`) | graph |
-| Score / slip still flow to a self-excluded user | `ALLOWED_INFORMATIONAL` | careGate (`STILL allows…`) |
-
-## Quiet hours & frequency caps
-
-Quiet hours suppress the only interruptive surface (`push`); silent surfaces
-still update. The "Boosted for You" frequency cap is **backend-enforced** (a
-weekly counter in the gateway), never client-trusted.
-
-| Rule | Reason code | Test |
-| --- | --- | --- |
-| No interruptive push inside quiet hours | `QUIET_HOURS` | careGate |
-| Daily push cap respected | `DAILY_ALERT_CAP_REACHED` | careGate |
-| Weekly boost cap respected | `BOOST_WEEKLY_CAP_REACHED` | careGate + pipeline |
-
-## No spend / loss on ambient surfaces
-
-Lock screen and watch never normalise loss-chasing visibility. Any spend / loss /
-balance field is stripped from the payload before it reaches a surface — only
-slip status, score and cash-out value (money the user would receive) may appear.
-
-| Rule | Reason code | Test |
-| --- | --- | --- |
-| Spend/loss fields stripped from ambient payloads | `FINANCIALS_STRIPPED` | momentRouter (`strips spend/loss`) |
-
-## Age / market gating
-
-OS surfaces respect the same jurisdiction and KYC-verified-age gates as the core
-app. A widget or Live Activity **cannot exist** for an unverified or out-of-market
-account — the Care Gate returns before any surface is chosen.
-
-| Rule | Reason code | Test |
-| --- | --- | --- |
-| No surface for an unverified / out-of-market account | `ELIGIBILITY_NOT_VERIFIED` | careGate + pipeline (`blocks ALL surfaces… (Jakub)`) |
-
-## Why this is a mechanism, not a promise
-
-The inducement class is separate from the informational class, and there is **no
-parameter, campaign flag or "win-back" override** that re-enables inducements for
-a protected user. The suppression is demonstrable live (flip a flag in the demo
-and watch the boost vanish while the score keeps updating) and every decision —
-allowed or blocked — is written to an append-only audit log powering the
-in-product "why am I seeing this?" trail.
+**Assurance.** Every guarantee above maps to a reason code and at least one test; the mapping is maintained in `docs/compliance-map.md`. Configuration (quiet hours, caps, TCF version, RG flags) is environment-driven, so market-specific regulatory thresholds can be tuned without code changes. This note reflects the enforced behaviour of the shipped prototype, not an aspiration.
