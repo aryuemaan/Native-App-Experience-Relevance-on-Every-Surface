@@ -68,20 +68,8 @@ To point the demo at the Rust gateway instead, set `VITE_GATEWAY_URL` to its URL
 
 ## Architecture
 
-```mermaid
-graph TD
-  feed["11-laps odds feed (stub or live)"] --> ev["Raw events (sports + gaming)"]
-  ev --> cls["Content class: informational vs inducement"]
-  cls --> router["Moment Router: least-intrusive surface"]
-  router --> gate["Care Gate: eligibility, consent, TCF, RG, quiet hours, caps"]
-  gate -->|allowed| fin["Finalise surface + strip financials / CTAs"]
-  gate -->|blocked| audit["Audit only, never emitted"]
-  fin --> hub["Per-user stream hub"]
-  fin --> audit
-  hub --> surfaces["Widgets, Live Activity, Dynamic Island, Watch, Quick actions, Push"]
-  graph["Knowledge graph (users, interests, surfaces, RG/consent)"] --- router
-  graph --- gate
-```
+<img width="2125" height="2375" alt="feg-pulse-architecture" src="https://github.com/user-attachments/assets/868fceb7-283a-434d-83ed-f76312e5555c" />
+
 
 The pipeline is total: every event ends as either an emitted moment or an audited
 block, and both carry the full reason trail.
