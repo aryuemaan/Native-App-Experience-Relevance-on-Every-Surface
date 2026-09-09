@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PSK Pulse</string>
+    <string name="live">Uzivo</string>
+    <string name="slip">Listic</string>
+    <string name="cashout">Isplati</string>
+    <string name="follow">Prati uzivo</string>
+    <string name="unfollow">Prekini pracenje</string>
+    <string name="teams_widget">Moji timovi</string>
+    <string name="slip_widget">Moj listic</string>
+    <string name="boost_widget">Boost za tebe</string>
+    <string name="channel_live_name">Uzivo pracenje meca</string>
+    <string name="channel_live_desc">Rezultat i isplata tvog listica</string>
+    <string name="channel_moment_name">Trenuci</string>
+</resources>

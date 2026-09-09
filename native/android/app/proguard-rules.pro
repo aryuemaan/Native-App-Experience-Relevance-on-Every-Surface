@@ -1,0 +1,4 @@
+-keepattributes *Annotation*
+-keepclassmembers class kotlinx.serialization.json.** { *; }
+-keep,includedescriptorclasses class hr.psk.pulse.**$$serializer { *; }
+-keepclassmembers class hr.psk.pulse.** { *** Companion; }

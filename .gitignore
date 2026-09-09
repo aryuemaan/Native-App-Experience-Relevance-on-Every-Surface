@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+.env
+*.log
+.DS_Store
+# native build artifacts
+native/ios/**/DerivedData/
+native/ios/**/*.xcodeproj
+native/android/**/.gradle/
+native/android/**/build/
+native/android/**/local.properties

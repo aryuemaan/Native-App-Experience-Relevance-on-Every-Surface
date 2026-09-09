@@ -1,0 +1,37 @@
+# XcodeGen spec — run `xcodegen generate` to produce FortunaPulse.xcodeproj,
+# then open it in Xcode 15+. Set your team + bundle-id prefix before building.
+name: FortunaPulse
+options:
+  bundleIdPrefix: com.fortuna.pulse
+  deploymentTarget:
+    iOS: "17.0"
+
+packages:
+  PulseKit:
+    path: PulseKit
+
+targets:
+  PulseApp:
+    type: application
+    platform: iOS
+    sources: [PulseApp]
+    dependencies:
+      - package: PulseKit
+      - target: PulseWidget
+    info:
+      path: PulseApp/Info.plist
+      properties:
+        NSSupportsLiveActivities: true
+        UILaunchScreen: {}
+
+  PulseWidget:
+    type: app-extension
+    platform: iOS
+    sources: [PulseWidget]
+    dependencies:
+      - package: PulseKit
+    info:
+      path: PulseWidget/Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension

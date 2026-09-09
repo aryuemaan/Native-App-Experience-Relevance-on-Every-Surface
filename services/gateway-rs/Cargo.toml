@@ -1,0 +1,40 @@
+[package]
+name = "feg-pulse-gateway"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.75"
+description = "FEG Pulse gateway: Care Gate compliance kernel, Moment Router, knowledge-graph routing and live surface fan-out for sports and gaming."
+
+[[bin]]
+name = "feg-pulse-gateway"
+path = "src/main.rs"
+
+[lib]
+name = "feg_pulse_gateway"
+path = "src/lib.rs"
+
+[dependencies]
+tokio = { version = "=1.36.0", features = ["rt-multi-thread", "macros", "net", "time", "sync", "signal"] }
+axum = { version = "=0.7.4", features = ["ws"] }
+tower = { version = "=0.4.13", features = ["util"] }
+tower-http = { version = "=0.5.2", features = ["cors", "trace"] }
+serde = { version = "=1.0.197", features = ["derive"] }
+serde_json = "=1.0.114"
+tracing = "=0.1.40"
+tracing-subscriber = { version = "=0.3.18", features = ["env-filter"] }
+petgraph = "=0.6.4"
+indexmap = "=2.2.6"
+dotenvy = "=0.15.7"
+uuid = { version = "=1.7.0", features = ["v4"] }
+futures-util = "0.3"
+chrono = { version = "=0.4.34", features = ["serde", "clock"] }
+
+[dependencies.url]
+version = "=2.5.0"
+
+[dependencies.idna]
+version = "=0.5.0"
+
+[profile.release]
+opt-level = 2
+lto = false

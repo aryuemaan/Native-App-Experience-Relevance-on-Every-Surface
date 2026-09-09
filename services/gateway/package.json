@@ -1,0 +1,31 @@
+{
+  "name": "@fortuna-pulse/gateway",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fortuna Pulse — event gateway, Care Gate compliance kernel and Moment Router.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.1.0",
+    "@fastify/websocket": "^11.3.0",
+    "fastify": "^5.12.3",
+    "pino": "^9.3.2",
+    "tsx": "^4.19.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.15",
+    "pino-pretty": "^11.2.2",
+    "typescript": "^5.5.4",
+    "vitest": "^5.0.0"
+  }
+}
